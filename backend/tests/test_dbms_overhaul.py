@@ -181,3 +181,25 @@ def test_db_observatory_dynamic_table_and_invalid_identifier():
     assert missing_tbl.status_code == 404
 
 
+def test_dbms_records_sorting_and_sql_sandbox():
+    sorted_res = client.get("/api/db/tables/users/records?page=1&page_size=2&sort_by=id&sort_order=desc")
+    assert sorted_res.status_code == 200
+    payload = sorted_res.json()
+    assert payload["page"] == 1
+    assert payload["page_size"] == 2
+    assert payload["count_is_estimated"] is False
+    ids = [int(r["id"]) for r in payload["rows"]]
+    assert ids == sorted(ids, reverse=True)
+
+    # Blocked engine commands in SQL console
+    for bad_sql in ["ATTACH DATABASE 'x.db' AS x;", "VACUUM;"]:
+        res = client.post("/api/db/sql", json={"query": bad_sql})
+        assert res.status_code == 200
+        assert res.json()["success"] is False
+        assert "Security Violation" in res.json()["error"]
+
+    # Empty SQL query must be rejected cleanly with HTTP 400
+    empty_res = client.post("/api/db/sql", json={"query": "   "})
+    assert empty_res.status_code == 400
+
+
