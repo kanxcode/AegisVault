@@ -34,6 +34,11 @@ def get_disk_requests(db: Session = Depends(get_db)):
 
 @router.post("/requests", response_model=DiskRequestResponse)
 def add_disk_request(req_in: DiskRequestCreate, db: Session = Depends(get_db)):
+    if req_in.track < 0:
+        raise HTTPException(status_code=400, detail="Track number must be non-negative")
+    if req_in.sector is not None and req_in.sector < 0:
+        raise HTTPException(status_code=400, detail="Sector number must be non-negative")
+
     req_id = f"d{random.randint(100, 999)}"
     new_req = DiskRequestModel(
         id=req_id,
@@ -71,6 +76,10 @@ def clear_serviced_requests(db: Session = Depends(get_db)):
 
 @router.post("/simulate", response_model=DiskSimulationResult)
 def simulate_disk(request: DiskSimulationRequest, db: Session = Depends(get_db)):
+    if request.disk_size <= 0:
+        raise HTTPException(status_code=400, detail="Disk size must be greater than zero")
+    if not request.requests:
+        raise HTTPException(status_code=400, detail="Disk request queue cannot be empty")
     if request.head < 0 or request.head >= request.disk_size:
         raise HTTPException(status_code=400, detail="Invalid initial head position")
         

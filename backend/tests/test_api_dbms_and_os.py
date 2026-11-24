@@ -88,3 +88,36 @@ def test_system_metrics():
     assert isinstance(data["uptime_seconds"], (int, float))
     assert data["uptime_seconds"] >= 0
     assert len(data["telemetry"]) > 0
+
+def test_process_and_disk_validation():
+    bad_proc = client.post("/api/processes/", json={
+        "pid": "P_BAD",
+        "name": "invalid",
+        "state": "READY",
+        "burst_time": 0,
+        "priority": 1,
+        "memory": 128,
+    })
+    assert bad_proc.status_code == 400
+
+    bad_state = client.post("/api/processes/", json={
+        "pid": "P_BAD2",
+        "name": "invalid_state",
+        "state": "UNKNOWN_STATE",
+        "burst_time": 10,
+        "priority": 1,
+        "memory": 64,
+    })
+    assert bad_state.status_code == 400
+
+    bad_track = client.post("/api/disk/requests", json={"track": -5, "sector": 1})
+    assert bad_track.status_code == 400
+
+    bad_disk_sim = client.post("/api/disk/simulate", json={
+        "algorithm": "SCAN",
+        "head": 50,
+        "requests": [],
+        "disk_size": 0,
+        "direction": "RIGHT",
+    })
+    assert bad_disk_sim.status_code == 400

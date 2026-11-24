@@ -36,16 +36,32 @@ def get_processes(
     
     return query.order_by(ProcessModel.id.asc()).all()
 
+VALID_PROCESS_STATES = {"NEW", "READY", "RUNNING", "WAITING", "TERMINATED"}
+
 @router.post("/", response_model=ProcessResponse)
 def create_process(proc_in: ProcessCreate, db: Session = Depends(get_db)):
-    existing = db.query(ProcessModel).filter(ProcessModel.pid == proc_in.pid.upper()).first()
-    if existing:
-        raise HTTPException(status_code=400, detail=f"Process with PID {proc_in.pid} already exists")
+    pid_clean = proc_in.pid.strip().upper()
+    name_clean = proc_in.name.strip()
+    if not pid_clean or not name_clean:
+        raise HTTPException(status_code=400, detail="Process PID and name must not be empty")
 
-    target_state = proc_in.state.upper()
+    target_state = proc_in.state.strip().upper()
+    if target_state not in VALID_PROCESS_STATES:
+        raise HTTPException(status_code=400, detail=f"Invalid initial process state: {target_state}")
+    if proc_in.burst_time <= 0:
+        raise HTTPException(status_code=400, detail="Burst time must be greater than zero")
+    if proc_in.memory <= 0:
+        raise HTTPException(status_code=400, detail="Memory allocation must be greater than zero")
+    if proc_in.arrival_time < 0 or proc_in.cpu_time < 0:
+        raise HTTPException(status_code=400, detail="Arrival time and CPU time must be non-negative")
+
+    existing = db.query(ProcessModel).filter(ProcessModel.pid == pid_clean).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Process with PID {pid_clean} already exists")
+
     new_proc = ProcessModel(
-        pid=proc_in.pid.upper(),
-        name=proc_in.name,
+        pid=pid_clean,
+        name=name_clean,
         state=target_state,
         arrival_time=proc_in.arrival_time,
         burst_time=proc_in.burst_time,
