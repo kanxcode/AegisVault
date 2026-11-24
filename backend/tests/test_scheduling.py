@@ -64,3 +64,50 @@ def test_priority_scheduling(sample_processes):
     assert result.gantt[1].pid == "P2"
     assert result.gantt[2].pid == "P3"
     assert result.gantt[3].pid == "P4"
+
+def test_fcfs_cpu_idle_gap():
+    procs = [
+        ProcessInput(pid="P1", arrival_time=5, burst_time=3, priority=1),
+        ProcessInput(pid="P2", arrival_time=12, burst_time=4, priority=1),
+    ]
+    result = schedule_fcfs(procs)
+    assert result.gantt[0].start == 5
+    assert result.gantt[0].end == 8
+    assert result.gantt[1].start == 12
+    assert result.gantt[1].end == 16
+    assert result.waiting_times == {"P1": 0, "P2": 0}
+    assert result.turnaround_times == {"P1": 3, "P2": 4}
+    assert any(ev.operation == "cpu_idle" for ev in result.trace_events)
+
+def test_round_robin_metrics_and_completion():
+    procs = [
+        ProcessInput(pid="A", arrival_time=0, burst_time=5, priority=1),
+        ProcessInput(pid="B", arrival_time=1, burst_time=3, priority=1),
+    ]
+    result = schedule_round_robin(procs, quantum=2)
+    assert result.completion_times["A"] == 8
+    assert result.completion_times["B"] == 7
+    assert result.turnaround_times["A"] == 8
+    assert result.turnaround_times["B"] == 6
+    assert result.response_times["A"] == 0
+    assert result.response_times["B"] == 1
+
+def test_scheduling_api_validation():
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    assert client.post("/api/scheduling/run", json={"algorithm": "FCFS", "processes": []}).status_code == 400
+    assert client.post("/api/scheduling/run", json={
+        "algorithm": "FCFS",
+        "processes": [{"pid": "P1", "arrival_time": 0, "burst_time": 0, "priority": 1}],
+    }).status_code == 400
+    assert client.post("/api/scheduling/run", json={
+        "algorithm": "RR",
+        "quantum": 0,
+        "processes": [{"pid": "P1", "arrival_time": 0, "burst_time": 4, "priority": 1}],
+    }).status_code == 400
+    assert client.post("/api/scheduling/run", json={
+        "algorithm": "UNKNOWN",
+        "processes": [{"pid": "P1", "arrival_time": 0, "burst_time": 4, "priority": 1}],
+    }).status_code == 400
