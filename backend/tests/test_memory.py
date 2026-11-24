@@ -77,3 +77,50 @@ def test_exact_match(sample_blocks):
     assert b3.status == "ALLOCATED"
     # There should be 4 blocks (no new split block)
     assert len(result.remaining_blocks) == 4
+
+def test_memory_conservation_and_preallocated_skip():
+    blocks = [
+        MemoryBlockInput(id="B0", size=256, status="ALLOCATED"),
+        MemoryBlockInput(id="B1", size=128, status="FREE"),
+        MemoryBlockInput(id="B2", size=512, status="FREE"),
+    ]
+    procs = [ProcessMemoryRequest(pid="P1", size=100)]
+
+    for allocator in (allocate_first_fit, allocate_best_fit, allocate_worst_fit):
+        res = allocator(blocks, procs)
+        assert res.total_memory == 896
+        assert res.allocated_memory + res.free_memory == res.total_memory
+        assert res.allocations[0].block_id != "B0"
+
+def test_memory_exhaustion_all_unallocated():
+    blocks = [
+        MemoryBlockInput(id="B1", size=64, status="FREE"),
+        MemoryBlockInput(id="B2", size=128, status="FREE"),
+    ]
+    procs = [ProcessMemoryRequest(pid="HUGE", size=512)]
+    res = allocate_best_fit(blocks, procs)
+    assert res.allocations == []
+    assert res.unallocated_processes == ["HUGE"]
+    assert res.allocated_memory == 0
+    assert res.fragmentation == 192
+
+def test_memory_api_validation():
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    assert client.post("/api/memory/simulate", json={
+        "algorithm": "FIRST_FIT",
+        "blocks": [],
+        "processes": [{"pid": "P1", "size": 64}],
+    }).status_code == 400
+    assert client.post("/api/memory/simulate", json={
+        "algorithm": "BEST_FIT",
+        "blocks": [{"id": "B1", "size": -50, "status": "FREE"}],
+        "processes": [{"pid": "P1", "size": 32}],
+    }).status_code == 400
+    assert client.post("/api/memory/simulate", json={
+        "algorithm": "INVALID_FIT",
+        "blocks": [{"id": "B1", "size": 100, "status": "FREE"}],
+        "processes": [{"pid": "P1", "size": 32}],
+    }).status_code == 400
