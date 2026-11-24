@@ -53,7 +53,7 @@ export default function DiskScheduler() {
 
   useEffect(() => {
     fetchDiskRequests();
-    api.getDiskHistory(5).then((h) => Array.isArray(h) && setHistory(h)).catch(() => {});
+    api.getDiskHistory(5).then((h) => Array.isArray(h) && setHistory(h)).catch(() => { });
   }, [fetchDiskRequests]);
 
   const handleSimulate = async () => {
@@ -83,7 +83,7 @@ export default function DiskScheduler() {
       setTraceEvents(events);
       setCurrentStep(0);
       fetchDiskRequests();
-      api.getDiskHistory(5).then((h) => Array.isArray(h) && setHistory(h)).catch(() => {});
+      api.getDiskHistory(5).then((h) => Array.isArray(h) && setHistory(h)).catch(() => { });
 
       if (data.execution_id) {
         setActiveExecution({
@@ -157,8 +157,8 @@ export default function DiskScheduler() {
     currentEvent?.state_after?.cumulative_movement !== undefined
       ? currentEvent.state_after.cumulative_movement
       : currentEvent?.state_after?.total_head_movement !== undefined
-      ? currentEvent.state_after.total_head_movement
-      : simResult?.total_head_movement ?? 0;
+        ? currentEvent.state_after.total_head_movement
+        : simResult?.total_head_movement ?? 0;
 
   const activeServicedTracks: number[] =
     currentEvent?.state_after?.serviced ??
@@ -199,11 +199,10 @@ export default function DiskScheduler() {
 
         <button
           onClick={() => setShowComparison(!showComparison)}
-          className={`h-8 px-3 font-mono text-xs font-semibold rounded-[2px] border flex items-center gap-1.5 transition-colors cursor-pointer ${
-            showComparison
-              ? "bg-[#281E0E] border-[#594019] text-[#F59E0B]"
-              : "bg-[#0C1013] hover:bg-[#171E24] border-[#1C252C] text-[#8B98A5] hover:text-[#E6EDF3]"
-          }`}
+          className={`h-8 px-3 font-mono text-xs font-semibold rounded-[2px] border flex items-center gap-1.5 transition-colors cursor-pointer ${showComparison
+            ? "bg-[#281E0E] border-[#594019] text-[#F59E0B]"
+            : "bg-[#0C1013] hover:bg-[#171E24] border-[#1C252C] text-[#8B98A5] hover:text-[#E6EDF3]"
+            }`}
         >
           <BarChart3 className="w-3.5 h-3.5 text-[#F59E0B]" />
           <span>{showComparison ? "HIDE BENCHMARK" : "INLINE BENCHMARK"}</span>

@@ -436,22 +436,20 @@ export default function FileManager() {
                 <button
                   type="button"
                   onClick={() => setCreateType("FILE")}
-                  className={`flex-1 h-8 rounded-[2px] border cursor-pointer ${
-                    createType === "FILE"
-                      ? "bg-[#12271B] border-[#265438] text-[#4ADE80] font-bold"
-                      : "border-[#1C252C] text-[#8B98A5]"
-                  }`}
+                  className={`flex-1 h-8 rounded-[2px] border cursor-pointer ${createType === "FILE"
+                    ? "bg-[#12271B] border-[#265438] text-[#4ADE80] font-bold"
+                    : "border-[#1C252C] text-[#8B98A5]"
+                    }`}
                 >
                   FILE
                 </button>
                 <button
                   type="button"
                   onClick={() => setCreateType("DIRECTORY")}
-                  className={`flex-1 h-8 rounded-[2px] border cursor-pointer ${
-                    createType === "DIRECTORY"
-                      ? "bg-[#0F2430] border-[#1E4B63] text-[#38BDF8] font-bold"
-                      : "border-[#1C252C] text-[#8B98A5]"
-                  }`}
+                  className={`flex-1 h-8 rounded-[2px] border cursor-pointer ${createType === "DIRECTORY"
+                    ? "bg-[#0F2430] border-[#1E4B63] text-[#38BDF8] font-bold"
+                    : "border-[#1C252C] text-[#8B98A5]"
+                    }`}
                 >
                   DIRECTORY
                 </button>

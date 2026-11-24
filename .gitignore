@@ -1,4 +1,3 @@
-cat > .gitignore <<'EOF'
 # Dependencies
 node_modules/
 venv/
@@ -36,4 +35,3 @@ coverage/
 .vscode/
 .idea/
 .DS_Store
-EOF

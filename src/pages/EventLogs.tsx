@@ -113,21 +113,19 @@ export default function EventLogs() {
         <div className="flex bg-[#080B0D] p-0.5 rounded-[2px] border border-[#1C252C]">
           <button
             onClick={() => setActiveTab("EVENTS")}
-            className={`px-3 py-1 font-mono text-xs rounded-[2px] transition-colors cursor-pointer ${
-              activeTab === "EVENTS"
-                ? "bg-[#12271B] text-[#4ADE80] border border-[#265438] font-bold"
-                : "text-[#8B98A5] hover:text-[#E6EDF3]"
-            }`}
+            className={`px-3 py-1 font-mono text-xs rounded-[2px] transition-colors cursor-pointer ${activeTab === "EVENTS"
+              ? "bg-[#12271B] text-[#4ADE80] border border-[#265438] font-bold"
+              : "text-[#8B98A5] hover:text-[#E6EDF3]"
+              }`}
           >
             SYSTEM EVENTS ({events.length})
           </button>
           <button
             onClick={() => setActiveTab("EXECUTIONS")}
-            className={`px-3 py-1 font-mono text-xs rounded-[2px] transition-colors cursor-pointer ${
-              activeTab === "EXECUTIONS"
-                ? "bg-[#0F2430] text-[#38BDF8] border border-[#1E4B63] font-bold"
-                : "text-[#8B98A5] hover:text-[#E6EDF3]"
-            }`}
+            className={`px-3 py-1 font-mono text-xs rounded-[2px] transition-colors cursor-pointer ${activeTab === "EXECUTIONS"
+              ? "bg-[#0F2430] text-[#38BDF8] border border-[#1E4B63] font-bold"
+              : "text-[#8B98A5] hover:text-[#E6EDF3]"
+              }`}
           >
             EXECUTION HISTORIES ({executions.length})
           </button>
@@ -253,8 +251,8 @@ export default function EventLogs() {
                         event.severity === "ERROR"
                           ? "red"
                           : event.severity === "WARNING"
-                          ? "amber"
-                          : "cyan"
+                            ? "amber"
+                            : "cyan"
                       }
                     >
                       {event.module}
@@ -265,8 +263,8 @@ export default function EventLogs() {
                       event.severity === "ERROR"
                         ? "text-[#F87171] font-bold"
                         : event.severity === "WARNING"
-                        ? "text-[#F59E0B] font-bold"
-                        : "text-[#E6EDF3] font-bold"
+                          ? "text-[#F59E0B] font-bold"
+                          : "text-[#E6EDF3] font-bold"
                     }
                   >
                     {event.event}
