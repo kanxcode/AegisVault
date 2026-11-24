@@ -143,3 +143,38 @@ def test_rename_file_api():
 
     # Cleanup
     client.delete(f"/api/files/?path=/var/log/{new_name}")
+
+def test_comparison_payload_validation():
+    bad_cpu = client.post("/api/executions/compare/cpu", json={
+        "processes": [{"pid": "P1", "arrival_time": 0, "burst_time": 0, "priority": 1}],
+        "quantum": 2,
+    })
+    assert bad_cpu.status_code == 400
+
+    bad_quantum = client.post("/api/executions/compare/cpu", json={
+        "processes": [{"pid": "P1", "arrival_time": 0, "burst_time": 5, "priority": 1}],
+        "quantum": 0,
+    })
+    assert bad_quantum.status_code == 400
+
+    bad_mem = client.post("/api/executions/compare/memory", json={
+        "blocks": [{"id": "B1", "size": -10, "status": "FREE"}],
+        "processes": [{"pid": "P1", "size": 50}],
+    })
+    assert bad_mem.status_code == 400
+
+    bad_disk = client.post("/api/executions/compare/disk", json={
+        "head": 250,
+        "requests": [10, 20],
+        "disk_size": 200,
+        "direction": "RIGHT",
+    })
+    assert bad_disk.status_code == 400
+
+    bad_dir = client.post("/api/executions/compare/disk", json={
+        "head": 50,
+        "requests": [10, 20],
+        "disk_size": 200,
+        "direction": "UP",
+    })
+    assert bad_dir.status_code == 400

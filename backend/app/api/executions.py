@@ -117,6 +117,13 @@ def get_execution_trace_step(execution_id: str, step_number: int, db: Session = 
 def compare_cpu_algorithms(req: CpuCompareRequest):
     if not req.processes:
         raise HTTPException(status_code=400, detail="Process list cannot be empty")
+    if req.quantum is not None and req.quantum <= 0:
+        raise HTTPException(status_code=400, detail="Round Robin quantum must be greater than zero")
+    for p in req.processes:
+        if p.burst_time <= 0:
+            raise HTTPException(status_code=400, detail=f"Process {p.pid} has invalid burst time")
+        if p.arrival_time < 0:
+            raise HTTPException(status_code=400, detail=f"Process {p.pid} has negative arrival time")
         
     results = {}
     algos = ["FCFS", "SJF", "ROUND_ROBIN", "PRIORITY"]
@@ -173,6 +180,12 @@ def compare_cpu_algorithms(req: CpuCompareRequest):
 def compare_memory_algorithms(req: MemoryCompareRequest):
     if not req.blocks or not req.processes:
         raise HTTPException(status_code=400, detail="Blocks and processes must not be empty")
+    for b in req.blocks:
+        if b.size <= 0:
+            raise HTTPException(status_code=400, detail=f"Block {b.id} has invalid size")
+    for p in req.processes:
+        if p.size <= 0:
+            raise HTTPException(status_code=400, detail=f"Process {p.pid} has invalid size")
 
     results = {}
     algos = ["FIRST_FIT", "BEST_FIT", "WORST_FIT"]
@@ -216,8 +229,17 @@ def compare_memory_algorithms(req: MemoryCompareRequest):
 
 @router.post("/compare/disk")
 def compare_disk_algorithms(req: DiskCompareRequest):
+    if req.disk_size <= 0:
+        raise HTTPException(status_code=400, detail="Disk size must be greater than zero")
     if not req.requests:
         raise HTTPException(status_code=400, detail="Disk requests cannot be empty")
+    if req.direction not in ("LEFT", "RIGHT"):
+        raise HTTPException(status_code=400, detail="Invalid direction: expected LEFT or RIGHT")
+    if req.head < 0 or req.head >= req.disk_size:
+        raise HTTPException(status_code=400, detail="Invalid initial head position")
+    for track in req.requests:
+        if track < 0 or track >= req.disk_size:
+            raise HTTPException(status_code=400, detail=f"Invalid request track: {track}")
 
     results = {}
     algos = ["FCFS", "SSTF", "SCAN", "C-SCAN"]
