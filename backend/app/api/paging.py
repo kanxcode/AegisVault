@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
+import re
 
 from app.database.connection import get_db
 from app.models.simulation import SystemEvent, ExecutionModel
@@ -83,6 +84,8 @@ def simulate_paging(req: PagingSimulateRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Frame count must be greater than zero")
     if not req.reference_string:
         raise HTTPException(status_code=400, detail="Reference string cannot be empty")
+    if any(page < 0 for page in req.reference_string):
+        raise HTTPException(status_code=400, detail="Page numbers in reference string must be non-negative")
 
     algo = req.algorithm.upper()
     collector = TraceCollector(module="paging_replacement")
@@ -129,6 +132,14 @@ def simulate_paging(req: PagingSimulateRequest, db: Session = Depends(get_db)):
 
 @router.post("/translate", response_model=AddressTranslateResponse)
 def translate_virtual_address(req: AddressTranslateRequest, db: Session = Depends(get_db)):
+    if req.page_size <= 0:
+        raise HTTPException(status_code=400, detail="Page size must be greater than zero")
+
+    addr_raw = (req.virtual_address or "").strip()
+    hex_body = addr_raw[2:] if addr_raw.lower().startswith("0x") else addr_raw
+    if not hex_body or not re.fullmatch(r"[0-9a-fA-F]+", hex_body):
+        raise HTTPException(status_code=400, detail="Virtual address must be a valid non-negative hexadecimal value")
+
     pid = (req.pid or "P101").upper()
     pt = PROCESS_PAGE_TABLES.get(pid, PROCESS_PAGE_TABLES["P101"])
     tlb = PROCESS_TLB.get(pid, PROCESS_TLB["P101"])

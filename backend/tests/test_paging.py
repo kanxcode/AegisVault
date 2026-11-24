@@ -41,3 +41,30 @@ def test_address_translation_page_table():
     assert res["frame_number"] == 4
     assert res["offset"] == 5
     assert res["physical_address"] == "0x4005"
+
+def test_paging_api_validation():
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+
+    bad_neg = client.post("/api/paging/simulate", json={
+        "algorithm": "FIFO",
+        "frame_count": 3,
+        "reference_string": [1, -2, 3],
+    })
+    assert bad_neg.status_code == 400
+
+    bad_page_size = client.post("/api/paging/translate", json={
+        "virtual_address": "0x1000",
+        "page_size": 0,
+        "pid": "P101",
+    })
+    assert bad_page_size.status_code == 400
+
+    bad_hex = client.post("/api/paging/translate", json={
+        "virtual_address": "NOT_HEX",
+        "page_size": 4096,
+        "pid": "P101",
+    })
+    assert bad_hex.status_code == 400
