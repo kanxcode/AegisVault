@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Panel, Badge } from "@/components/ui";
-import { Network, Key, ArrowRight, RefreshCw, Database } from "lucide-react";
+import { Network, Key, ArrowRight, RefreshCw, Database, AlertTriangle } from "lucide-react";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -8,27 +8,29 @@ export default function DatabaseRelationships() {
   const [relationships, setRelationships] = useState<any[]>([]);
   const [tables, setTables] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [rels, ov] = await Promise.all([api.getDbRelationships(), api.getDbOverview()]);
       setRelationships(rels || []);
       setTables(ov?.tables || []);
-      if (ov?.tables?.length > 0 && !selectedEntity) {
-        setSelectedEntity(ov.tables[0].name);
+      if (ov?.tables?.length > 0) {
+        setSelectedEntity((prev) => prev ?? ov.tables[0].name);
       }
-    } catch (err) {
-      console.error("Failed to load schema relationships:", err);
+    } catch (err: any) {
+      setError(err?.message || "Unable to fetch schema relationships from backend.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    void loadData();
+  }, [loadData]);
 
   return (
     <div className="flex flex-col gap-4 max-w-[1440px] mx-auto pb-8 font-mono">
@@ -60,6 +62,13 @@ export default function DatabaseRelationships() {
           <span>REFRESH GRAPH</span>
         </button>
       </div>
+
+      {error && (
+        <div className="p-3 bg-[#2B1215] border border-[#6E2329] rounded-[2px] text-xs text-[#FCA5A5] flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-[#F87171] shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div className="lg:col-span-4">

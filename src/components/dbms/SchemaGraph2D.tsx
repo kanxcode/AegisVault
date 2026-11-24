@@ -14,6 +14,11 @@ interface SchemaGraph2DProps {
   onNavigateRecords: (name: string) => void;
 }
 
+const GRAPH_WIDTH = 920;
+const GRAPH_HEIGHT = 480;
+const GRAPH_CX = GRAPH_WIDTH / 2;
+const GRAPH_CY = GRAPH_HEIGHT / 2;
+
 export function SchemaGraph2D({
   nodes,
   edges,
@@ -29,11 +34,6 @@ export function SchemaGraph2D({
   const dragOrigin = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const width = 920;
-  const height = 480;
-  const cx = width / 2;
-  const cy = height / 2;
-
   const layout = useMemo(() => {
     const map = new Map<string, { x: number; y: number }>();
     const total = nodes.length;
@@ -44,8 +44,8 @@ export function SchemaGraph2D({
       const rx = total > 8 ? 330 : 270;
       const ry = total > 8 ? 185 : 155;
       map.set(n.name, {
-        x: cx + Math.cos(angle) * rx,
-        y: cy + Math.sin(angle) * ry,
+        x: GRAPH_CX + Math.cos(angle) * rx,
+        y: GRAPH_CY + Math.sin(angle) * ry,
       });
     });
     return map;
@@ -136,7 +136,7 @@ export function SchemaGraph2D({
         onWheel={handleWheel}
         style={{ cursor: dragging ? "grabbing" : "grab" }}
       >
-        <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
+        <svg ref={svgRef} viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`} className="w-full h-full">
           <defs>
             <marker id="fk-arrow-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
               <polygon points="0 0, 8 3, 0 6" fill="#3ECF72" />
@@ -146,7 +146,7 @@ export function SchemaGraph2D({
             </marker>
           </defs>
 
-          <g transform={`translate(${pan.x + cx * (1 - zoom)}, ${pan.y + cy * (1 - zoom)}) scale(${zoom})`}>
+          <g transform={`translate(${pan.x + GRAPH_CX * (1 - zoom)}, ${pan.y + GRAPH_CY * (1 - zoom)}) scale(${zoom})`}>
             {/* Edges */}
             {edges.map((edge) => {
               const s = layout.get(edge.source_table);
