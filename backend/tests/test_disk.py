@@ -41,3 +41,23 @@ def test_disk_cscan_right(initial_head, sample_requests, disk_size):
     # 53 -> 65 -> 67 -> 98 -> 122 -> 183 -> 199 -> 0 -> 14 -> 37
     assert result.movement_path == [53, 65, 67, 98, 122, 183, 199, 0, 14, 37]
     assert result.total_head_movement == (199 - 53) + (199 - 0) + (37 - 0) # 146 + 199 + 37 = 382
+
+def test_disk_scan_left(initial_head, sample_requests, disk_size):
+    result = schedule_scan(initial_head, sample_requests, disk_size, "LEFT")
+    assert result.algorithm == "SCAN"
+    # 53 -> 37 -> 14 -> 0 -> 65 -> 67 -> 98 -> 122 -> 183
+    assert result.movement_path == [53, 37, 14, 0, 65, 67, 98, 122, 183]
+    assert result.total_head_movement == (53 - 0) + (183 - 0)
+
+def test_disk_cscan_left(initial_head, sample_requests, disk_size):
+    result = schedule_cscan(initial_head, sample_requests, disk_size, "LEFT")
+    assert result.algorithm == "C-SCAN"
+    # 53 -> 37 -> 14 -> 0 -> 199 -> 183 -> 122 -> 98 -> 67 -> 65
+    assert result.movement_path == [53, 37, 14, 0, 199, 183, 122, 98, 67, 65]
+    assert result.total_head_movement == (53 - 0) + (199 - 0) + (199 - 65)
+
+def test_disk_zero_seek_single_track_at_head():
+    result = schedule_sstf(50, [50])
+    assert result.service_order == [50]
+    assert result.movement_path == [50, 50]
+    assert result.total_head_movement == 0
